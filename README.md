@@ -1,2 +1,4 @@
 # Tasteful
-Custom C Testing Framework
+Custom C Testing Framework made from Scratch.
+
+
