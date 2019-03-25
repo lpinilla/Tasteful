@@ -27,4 +27,4 @@ The use of a makefile in order to automate the process of compiling and running 
 				        |   |   |   |   |   |
 				        \   \   \   /   /   /
 				         `"""""""""""""""""`
- - Cheers
+				 - Cheers
