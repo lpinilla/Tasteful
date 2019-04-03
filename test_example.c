@@ -1,5 +1,7 @@
 #include "testing_suite.h"
 
+//declarando las funciones, tienen que ser de tipo void fun(void);
+
 void test1(void);
 void test2(void);
 void test3(void);
@@ -8,18 +10,18 @@ void test5(void);
 void test6(void);
 
 int main(void){
-   //creando un test_suite
+    //creando un test_suite
     create_suite("Testing the Framework");
-
+    //agregando los tests
     add_test(test1);
     add_test(test2);
     add_test(test3);
     add_test(test4);
     add_test(test5);
     add_test(test6);
-
+    //correr la suite
     run_suite();
-    
+    //liberar los espacios
     clear_suite();
 }
 
