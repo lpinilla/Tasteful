@@ -1,4 +1,5 @@
 #include "testing_suite.h"
+#include <signal.h>
 
 
 void create_suite(char * suite_name){
@@ -27,31 +28,29 @@ void run_suite(){
     printf("----------------------------------------------\n");
     printf("Testing Suite \" %s \" \n", suite->suite_name);
     printf("----------------------------------------------\n");
-    int cpid[suite->n_of_tests];    
-    int child_status = 0;
+    int cpid[suite->n_of_tests], child_status[suite->n_of_tests];
     suite->suite_state = SUCCESS;
 
     //correr los procesos
     for(int i = 0; i < suite->n_of_tests; i++){
         cpid[i] = fork();
-        child_status = 0;
+        child_status[i] = 0;
         if(cpid[i] == -1){
             perror("Error creating child process");
             exit(EXIT_FAILURE);
         }else if(cpid[i] == 0){ //proceso hijo, el test
             suite->fun_ptrs[i]();
+            if(errno != 0){
+                fprintf(stderr, "Error %d %s \n", errno, strerror(errno));
+            }
             exit(EXIT_SUCCESS);
         }
+        waitpid(cpid[i], &child_status[i], 0);
     }
-    /*Esperar a que los procesos terminen, lo separo porque si
-    **esta todo junto, obliga a que los tests se hagan secuencialmente
-    **lo que puede hacer que un test lleve mucho tiempo de I/O por ejemplo
-    **pero no usa el CPU y mientras tanto otro test podría ir corriendo*/
 
     for(int i = 0; i < suite->n_of_tests; i++){
-        waitpid(cpid[i], &child_status, 0);
-        if(WIFEXITED(child_status)){//si terminó
-            if(!WEXITSTATUS(child_status)){
+        if(WIFEXITED(child_status[i])){//si terminó
+            if(!WEXITSTATUS(child_status[i])){
                 printf("\033[0;32m");
                 printf("%d: %s \n",i, "PASS");
                 printf("\033[0m");
@@ -59,12 +58,28 @@ void run_suite(){
                 suite->suite_state = FAILURE;
                 printf("\033[0;31m");
                 printf("%d: %s \n",i, "FAIL");
+                printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
+                //print_trace();
                 printf("\033[0m");
             }
-        }else{ //el proceso no terminó
+        }else if(WIFSIGNALED(child_status[i])){ //terminó por una señal            
             suite->suite_state = FAILURE;
             printf("\033[0;31m");
             printf("%d: %s \n",i, "FAIL");
+            printf("Killed by signal %d \n", WTERMSIG(child_status[i]));    
+            printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
+            printf("\033[0m");
+        }else if(WIFSTOPPED(child_status[i])){
+            suite->suite_state = FAILURE;
+            printf("\033[0;31m");
+            printf("%d: %s ",i, "FAIL");   
+            printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
+            printf("\033[0m");
+        }else{ //el proceso no terminó
+            suite->suite_state = FAILURE;
+            printf("\033[0;31m");
+            printf("%d: %s \n",i, "FAIL");            
+            printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
             printf("\033[0m");
         }
     }
@@ -116,4 +131,38 @@ inline void assert_true(int i){ //podría ser una macro
 
 inline void assert_false(int i){ //podría ser una macro
     i? exit(EXIT_FAILURE) : exit(EXIT_SUCCESS);
+}
+
+//https://stackoverflow.com/questions/9555837/how-to-know-caller-function-when-tracing-assertion-failure
+void print_trace(void){
+    void * array[10];
+    size_t size, i;
+    char ** strings;
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+    printf ("Obtained %zd stack frames.\n", size);
+    for (i = 0; i < size; i++){
+        printf("\t %s \n", strings[i]);
+    }
+    free (strings);
+}
+
+void check_child_status(int status){
+    if (WIFEXITED(status)) {
+        printf("exited, status=%d\n", WEXITSTATUS(status));
+    } else if (WIFSIGNALED(status)) {
+        printf("killed by signal %d", WTERMSIG(status));
+        switch(WTERMSIG(status)){
+            case SIGSEGV:
+                printf("\t ++Segmentation fault \n");
+                break;
+            case SIGABRT:
+                printf("\t ++Abort \n");
+                break;
+        }
+    } else if (WIFSTOPPED(status)) {
+        printf("stopped by signal %d\n", WSTOPSIG(status));
+    } else if (WIFCONTINUED(status)) {
+        printf("continued\n");
+    }
 }

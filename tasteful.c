@@ -2,8 +2,6 @@
 #include "testing_suite.h"
 
 
-//Mi propio framework de testing
-
 //              TASTEFUL
 //              _, . '__ . 
 //           '_(_0o),(__)o().
@@ -28,8 +26,7 @@ int main(void){
     int n_of_suites_found = find_tests();
     if(n_of_suites_found == 0){
         printf("No files found \n");
-        return 0;  
-    } 
+    }
     //imprimir cartelito
      printf("----------------------------------------------\n");
     printf("\t Tasteful Framework \n");
@@ -46,7 +43,7 @@ int main(void){
 char ** fetch_all_suites(int n_of_suites_found){
     //simplemente agarrar la salida de grep
     char * buffer = (char *) malloc(MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char));
-    char ** ret = malloc(n_of_suites_found);
+    char ** ret = (char **) malloc(n_of_suites_found);
     memset(buffer, 0x0, MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char));
     call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*(?!.)'", buffer);
     //cleaning buffer
