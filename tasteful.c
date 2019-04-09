@@ -2,6 +2,8 @@
 #include "testing_suite.h"
 
 
+//Framework de testing de código abierto: https://github.com/lpinilla/Tasteful
+
 //              TASTEFUL
 //              _, . '__ . 
 //           '_(_0o),(__)o().
@@ -28,12 +30,16 @@ int main(void){
         printf("No files found \n");
     }
     //imprimir cartelito
-     printf("----------------------------------------------\n");
+    printf("----------------------------------------------\n");
     printf("\t Tasteful Framework \n");
     printf("----------------------------------------------\n");
     printf("Number of Tests Found: %d \n", n_of_suites_found);
     //agarrar todas las suites
     char ** all_suites = fetch_all_suites(n_of_suites_found);
+    if(all_suites == NULL){
+        printf("Malloc error \n");
+        exit(EXIT_FAILURE);
+    }
     //correr las suites
     run_all_suites(all_suites, n_of_suites_found);
     //hay que liberar el espacio
@@ -43,9 +49,15 @@ int main(void){
 char ** fetch_all_suites(int n_of_suites_found){
     //simplemente agarrar la salida de grep
     char * buffer = (char *) malloc(MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char));
-    char ** ret = (char **) malloc(n_of_suites_found);
+    if(buffer == NULL){return NULL;}
+    char ** ret = (char **) malloc(n_of_suites_found * sizeof(char *));
+    if(ret == NULL){
+        free(buffer);
+        return NULL;
+    }
     memset(buffer, 0x0, MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char));
-    call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*(?!.)'", buffer);
+    //agarrar todos los nombres de los archivos
+    call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*.so'", buffer);
     //cleaning buffer
     for(int i = 0; i < (MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char) - 1); i++){
         if(buffer[i] == '\n'){
@@ -61,27 +73,40 @@ char ** fetch_all_suites(int n_of_suites_found){
             aux++;
             if(buffer[i] == '|'){ //encontramos el nombre de un archivo
                 //printf("aux: %d i: %d\n", aux, i); //testing
-                ret[ret_index] = malloc(aux * sizeof(char));    //hay que liberarlo
+                ret[ret_index] = (char *) malloc(aux * sizeof(char));    //hay que liberarlo
+                if(ret[ret_index] == NULL){
+                    printf("Problem allocating space for name\n");
+                    free(buffer);
+                    free(ret);
+                    return NULL;
+                }
                 strncpy(ret[ret_index], &buffer[i - aux + 1], (size_t) aux - 1);
-                ret[ret_index + aux] = 0;
+                //printf("printing: %s \n", (char *) ret[ret_index]);
+                //ret[ret_index + aux] = 0;
                 aux = 0;
                 ret_index++;
             }
         }
     }
-    //printf("%s \n", buffer);
-    //printf("Testing function:---------\n");
-    /*for(int i = 0; i < n_of_suites_found; i++){
+    /*printf("%s \n", buffer);
+    printf("Testing function:---------\n");
+    for(int i = 0; i < n_of_suites_found; i++){
         printf("%s \n", ret[i]);
     }*/
     //liberar el buffer
-    free(buffer);
+    if(buffer != NULL){
+        free(buffer);
+    }
     return ret;
 }
 
 int find_tests(){ //seguro se puede re optimizar a partir del comando anterior pero bueno
     char * buffer = (char *) malloc(sizeof(int));
-    call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*(?!.)' | wc -l", buffer);
+    if(buffer == NULL){
+        perror("malloc");
+        return 0;
+    }
+    call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*.so' | wc -l", buffer);
     int ret = atoi(buffer);
     free(buffer);
     return ret;
