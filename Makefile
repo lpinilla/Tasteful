@@ -4,7 +4,7 @@ MAIN= tasteful.o
 OBJ= test_example.o
 AUX= testing_suite.c
 
-all: $(OBJ) $(MAIN)
+all: $(OBJ:=.o) $(MAIN)
 	$(CC) $(CFLAGS) -o $(MAIN:.o=) $(MAIN) $(AUX)
 
 $(OBJ): $(OBJ:.o=.c) $(AUX) 

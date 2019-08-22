@@ -127,7 +127,7 @@ void assert_not_equals(const void * a, const void * b, size_t size_of_data){
 }
 
 void assert_uint_eq(uintmax_t a, uintmax_t b){
-    return assert_equals(&a,&b, sizeof(uintmax_t));
+    assert_equals(&a,&b, sizeof(uintmax_t));
 }
 
 inline void assert_true(int i){ //podría ser una macro
@@ -167,7 +167,7 @@ void check_child_status(int status){
         }
     } else if (WIFSTOPPED(status)) {
         printf("stopped by signal %d\n", WSTOPSIG(status));
-    } else if (WIFCONTINUED(status)) {
+    }/* else if (WIFCONTINUED(status)) {
         printf("continued\n");
-    }
+    }*/
 }
