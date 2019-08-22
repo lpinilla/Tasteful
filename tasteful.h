@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 
 //tamaño maximo de nombre de los archivos de test
-#define MAX_FILE_NAME_LENGTH 16
+#define MAX_FILE_NAME_LENGTH 32
 
 
 //Mi propio framework de testing

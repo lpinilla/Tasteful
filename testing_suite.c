@@ -1,5 +1,6 @@
 #include "testing_suite.h"
 #include <signal.h>
+#include <stdint.h>
 
 
 void create_suite(char * suite_name){
@@ -123,6 +124,10 @@ void assert_not_equals(const void * a, const void * b, size_t size_of_data){
         exit(EXIT_SUCCESS);
     }
     memcmp(a,b,size_of_data)? exit(EXIT_SUCCESS) : exit(EXIT_FAILURE);
+}
+
+void assert_uint_eq(uintmax_t a, uintmax_t b){
+    return assert_equals(&a,&b, sizeof(uintmax_t));
 }
 
 inline void assert_true(int i){ //podría ser una macro

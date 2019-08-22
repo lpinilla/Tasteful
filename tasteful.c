@@ -57,7 +57,7 @@ char ** fetch_all_suites(int n_of_suites_found){
     }
     memset(buffer, 0x0, MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char));
     //agarrar todos los nombres de los archivos
-    call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*.so'", buffer);
+    call_command("ls | grep -P .tasty", buffer);
     //cleaning buffer
     for(int i = 0; i < (MAX_FILE_NAME_LENGTH  * n_of_suites_found * sizeof(char) - 1); i++){
         if(buffer[i] == '\n'){
@@ -106,7 +106,7 @@ int find_tests(){ //seguro se puede re optimizar a partir del comando anterior p
         perror("malloc");
         return 0;
     }
-    call_command("ls | grep -P '[tT][eE][sS][tT][_-]*[a-z]*[A-Z]*[0-9]*[_-]*[a-z]*[A-Z]*.so' | wc -l", buffer);
+    call_command("ls | grep -P .tasty | wc -l", buffer);
     int ret = atoi(buffer);
     free(buffer);
     return ret;
@@ -166,7 +166,10 @@ void run_all_suites(char ** all_suites, int n_of_suites_found){
         }else if(cpids[i] == 0){ //el hijo
             //correr la suite
             char ** args = NULL;
-            execv(all_suites[i], args);
+            if( execv(all_suites[i], args) < 0){
+                //most probable cause: name too long, change define in tasteful.h
+                perror("Error\n");
+            }
             exit(EXIT_SUCCESS);
         }
         waitpid(cpids[i], &child_status[n_of_suites_found], 0);        
