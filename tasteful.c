@@ -25,7 +25,7 @@
 
 int main(void){
     //primero, encontrar cuantos tests hay
-    int n_of_suites_found = find_tests();
+    int n_of_suites_found = find_tests(), suites_failed = 0;
     if(n_of_suites_found == 0){
         printf("No files found \n");
     }
@@ -41,9 +41,12 @@ int main(void){
         exit(EXIT_FAILURE);
     }
     //correr las suites
-    run_all_suites(all_suites, n_of_suites_found);
+    suites_failed = run_all_suites(all_suites, n_of_suites_found);
+    //printf("ret status %d \n", suites_failed);
     //hay que liberar el espacio
     free_space(n_of_suites_found, all_suites);
+    if(suites_failed) exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 char ** fetch_all_suites(int n_of_suites_found){
@@ -155,9 +158,10 @@ void call_command(char * command, char * buffer){
     return;
 }
 
-void run_all_suites(char ** all_suites, int n_of_suites_found){
+int run_all_suites(char ** all_suites, int n_of_suites_found){
     //children cpid
     int cpids[n_of_suites_found], child_status[n_of_suites_found];
+    int suites_failed = 0;
     for(int i = 0; i < n_of_suites_found; i++){
         cpids[i] = fork();
         if(cpids[i] < 0){
@@ -172,11 +176,19 @@ void run_all_suites(char ** all_suites, int n_of_suites_found){
             }
             exit(EXIT_SUCCESS);
         }
-        waitpid(cpids[i], &child_status[n_of_suites_found], 0);        
+        waitpid(cpids[i], &child_status[i], 0);
     }
-    /*for(int i = 0; i < n_of_suites_found; i++){
-        waitpid(cpids[i], &child_status[n_of_suites_found], 0);
-    }*/
+    for(int i = 0; i < n_of_suites_found; i++){
+        //printf("child status: %d \n", child_status[i]);
+        //waitpid(cpids[i], &child_status[n_of_suites_found], 0);
+        if( WIFEXITED(child_status[i])){
+            //printf("exit status %d %d \n", i, WEXITSTATUS(child_status[i]));
+            if( WEXITSTATUS(child_status[i]) ){
+                suites_failed++;
+            }
+        }
+    }
+    return suites_failed;
 }
 
 void free_space(int n_of_suites_found, char ** all_suites){

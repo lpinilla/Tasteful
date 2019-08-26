@@ -6,6 +6,7 @@ AUX= testing_suite.c
 
 all: $(OBJ) $(MAIN)
 	$(CC) $(CFLAGS) -o $(MAIN:.o=) $(MAIN) $(AUX)
+	rm -rf *.o 
 
 $(OBJ): $(OBJ:.o=.c) $(AUX) 
 	$(CC) $(CFLAGS) -c $(@:.o=.c) $(AUX)

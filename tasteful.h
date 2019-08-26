@@ -33,7 +33,7 @@
 //        \   \   \   /   /   /
 //         `"""""""""""""""""`
 
-void run_all_suites(char ** all_suites, int n_of_suites_found);
+int run_all_suites(char ** all_suites, int n_of_suites_found);
 
 /*devuelve un array dinámico de suites en base a los archivos
 **binarios cuyos nombres empiecen con test (o sus variaciones)*/

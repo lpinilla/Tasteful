@@ -31,7 +31,6 @@ void run_suite(){
     printf("----------------------------------------------\n");
     int cpid[suite->n_of_tests], child_status[suite->n_of_tests];
     suite->suite_state = SUCCESS;
-
     //correr los procesos
     for(int i = 0; i < suite->n_of_tests; i++){
         cpid[i] = fork();
@@ -84,8 +83,8 @@ void run_suite(){
             printf("\033[0m");
         }
     }
-
     //TODO: hay que ver qué pasa si un proceso se cuelga
+    int aux = suite->suite_state;
     if(suite->suite_state){
         printf("\033[0;31m");
         printf("\t \t \t The Suite failed \n");
@@ -96,6 +95,9 @@ void run_suite(){
         printf("\033[0m");
     }
     printf("----------------------------------------------\n");
+    clear_suite();
+    (aux)? exit(EXIT_FAILURE) : exit(EXIT_SUCCESS);
+
 }
 
 void clear_suite(){
