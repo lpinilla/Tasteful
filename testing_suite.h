@@ -10,6 +10,9 @@
 #include <errno.h>
 #include <execinfo.h>
 #include "tasteful.h"
+#include <signal.h>
+#include <stdint.h>
+
 
 #define ARRAY_STEP 5
 
@@ -44,6 +47,9 @@ void assert_true(int i);
 
 //verifica si el resultado de la operación que se le evalúe es falsa
 void assert_false(int i);
+
+//verifica si el valor a es igual al valor b siendo ambos del tipo uintmax_t
+void assert_uint_eq(uintmax_t a, uintmax_t b);
 
 //correr todas los tests del suite
 void run_suite();

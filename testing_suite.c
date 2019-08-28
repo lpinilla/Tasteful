@@ -1,7 +1,4 @@
 #include "testing_suite.h"
-#include <signal.h>
-#include <stdint.h>
-
 
 void create_suite(char * suite_name){
     suite = (t_test_suite *) malloc(sizeof(t_test_suite));
