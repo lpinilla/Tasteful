@@ -15,21 +15,29 @@
 
 
 #define ARRAY_STEP 5
+#define MAX_FUNC_NAME 64
+
+#define NAME_OFF(f) #f
 
 enum STATE {SUCCESS = 0, FAILURE}; //ver si hay que crear un 3er estado default
 
 typedef struct{
     //punteros a puntero a función
-    void  (** fun_ptrs) (void);
+    void  (* fun_ptr) (void);
+    char name[MAX_FUNC_NAME];
+}t_test;
+
+typedef t_test * test;
+
+typedef struct{
+    //puntero a array de tests
+    test tests;
     //cantidad de tests que contiene
     int n_of_tests;
-    //el estado final una vez corridos los tests (por defecto SUCCESS)
-    enum STATE suite_state; 
+    //el estado final una vez corridos los tests (por defecto FAILURE)
+    enum STATE suite_state;
     //path del suite
     char * suite_name;
-    /*índice del array (podría usarlo a futuro para que sea más cómodo
-    **agregar funciones)*/
-    int fun_index;
 }t_test_suite;
 
 typedef t_test_suite * test_suite;
@@ -57,8 +65,11 @@ void run_suite();
 //función para inicializar la suite
 void create_suite(char * suite_name);
 
-//función para agregar un test al suite
+//función para agregar un test al suite. Equivalente a llamar a add_named_test con el nombre ""
 void add_test(void (* fun) ());
+
+//función para agregar un test a la suite con un nombre para asociar
+void add_named_test(void (*fun)(), char const * name);
 
 //función que se encarga de hacer todos los free
 void clear_suite();

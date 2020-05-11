@@ -2,24 +2,28 @@
 
 void create_suite(char *suite_name) {
   suite = (t_test_suite *)malloc(sizeof(t_test_suite));
-  // suite->n_of_tests = n_of_tests;
   suite->suite_name = suite_name;
-  suite->fun_index  = 0;
-  suite->fun_ptrs   = NULL;
-  // creando el espacio para los tests
+  suite->tests = NULL;
+  suite->n_of_tests = 0;
+  suite->suite_state = FAILURE;
+  suite->suite_name = suite_name;
 }
 
 void add_test(void (*fun)()) {
-  if (suite == NULL) {
-    return;
+    add_named_test(fun, "");
+}
+
+void add_named_test(void (*fun)(), char const * name){
+  if (suite == NULL || fun == NULL || name == NULL) return;
+  if (suite->n_of_tests % ARRAY_STEP == 0){
+    suite->tests = (test) realloc(
+        (test) suite->tests,
+            sizeof(t_test) *
+            ARRAY_STEP *
+            (1 + suite->n_of_tests/ ARRAY_STEP));
   }
-  if ((suite->fun_index % ARRAY_STEP) == 0) {
-    suite->fun_ptrs = (void (**)())realloc(
-        (void (**)())suite->fun_ptrs,
-        sizeof(void *) * ARRAY_STEP * (1 + suite->fun_index));
-  }
-  suite->fun_ptrs[suite->fun_index] = fun;
-  suite->fun_index++;
+  suite->tests[suite->n_of_tests].fun_ptr = fun;
+  strncpy(suite->tests[suite->n_of_tests].name, name, MAX_FUNC_NAME);
   suite->n_of_tests++;
 }
 
@@ -37,7 +41,7 @@ void run_suite() {
       perror("Error creating child process");
       exit(EXIT_FAILURE);
     } else if (cpid[i] == 0) {  // proceso hijo, el test
-      suite->fun_ptrs[i]();
+      suite->tests[i].fun_ptr();
       if (errno != 0) {
         fprintf(stderr, "Error %d %s \n", errno, strerror(errno));
       }
@@ -50,12 +54,12 @@ void run_suite() {
     if (WIFEXITED(child_status[i])) {  // si terminó
       if (!WEXITSTATUS(child_status[i])) {
         printf("\033[0;32m");
-        printf("%d: %s \n", i, "PASS");
+        printf("%d: %s %s \n", i, "PASS", suite->tests[i].name);
         printf("\033[0m");
       } else {
         suite->suite_state = FAILURE;
         printf("\033[0;31m");
-        printf("%d: %s \n", i, "FAIL");
+        printf("%d: %s %s \n", i, "FAIL", suite->tests[i].name);
         printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
         // print_trace();
         printf("\033[0m");
@@ -63,21 +67,21 @@ void run_suite() {
     } else if (WIFSIGNALED(child_status[i])) {  // terminó por una señal
       suite->suite_state = FAILURE;
       printf("\033[0;31m");
-      printf("%d: %s \n", i, "FAIL");
+      printf("%d: %s %s \n", i, "FAIL", suite->tests[i].name);
       printf("Killed by signal %d \n", WTERMSIG(child_status[i]));
       printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
       printf("\033[0m");
-      print_trace();
+      //print_trace();
     } else if (WIFSTOPPED(child_status[i])) {
       suite->suite_state = FAILURE;
       printf("\033[0;31m");
-      printf("%d: %s ", i, "FAIL");
+      printf("%d: %s %s \n", i, "FAIL", suite->tests[i].name);
       printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
       printf("\033[0m");
     } else {  // el proceso no terminó
       suite->suite_state = FAILURE;
       printf("\033[0;31m");
-      printf("%d: %s \n", i, "FAIL");
+      printf("%d: %s %s \n", i, "FAIL", suite->tests[i].name);
       printf("-- return code: %d \n", WEXITSTATUS(child_status[i]));
       printf("\033[0m");
     }
@@ -99,7 +103,7 @@ void run_suite() {
 }
 
 void clear_suite() {
-  free(suite->fun_ptrs);
+  free(suite->tests);
   free(suite);
 }
 
